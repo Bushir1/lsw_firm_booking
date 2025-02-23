@@ -17,7 +17,8 @@
         }
 
         .chat-container {
-            width: 500px;
+            width: 90%;
+            max-width: 500px;
             height: 600px;
             border: 1px solid #ccc;
             border-radius: 10px;
@@ -25,14 +26,18 @@
             background-color: #f9f9f9;
             position: relative;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
         }
 
         .chat-box {
-            height: 450px;
+            flex-grow: 1;
             overflow-y: auto;
             border-bottom: 1px solid #ddd;
             padding-bottom: 10px;
             margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
         }
 
         .chat-input-container {
@@ -42,40 +47,48 @@
         }
 
         .chat-input {
-            width: calc(100% - 100px);
-            padding: 8px;
+            flex-grow: 1;
+            padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            font-size: 14px;
         }
 
         .send-button {
-            width: 80px;
-            padding: 8px;
+            padding: 10px;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            margin-left: 10px;
         }
 
         .chat-message {
-            background-color: #007bff;
-            color: white;
-            padding: 5px 10px;
+            padding: 10px;
             border-radius: 10px;
             margin: 5px 0;
             max-width: 70%;
         }
 
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+
         .bot-message {
             background-color: #ccc;
             color: black;
+            align-self: flex-start;
         }
 
-        .chat-message.bot-message {
-            background-color: #ccc;
-            color: black;
+        .typing-indicator {
+            font-size: 14px;
+            color: #555;
+            font-style: italic;
+            margin: 5px 0;
         }
     </style>
 </head>
@@ -92,6 +105,12 @@
     </div>
 
     <script>
+        document.getElementById("chat-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
         async function sendMessage() {
             let inputField = document.getElementById("chat-input");
             let message = inputField.value.trim();
@@ -101,30 +120,50 @@
 
             // User Message
             let userMessage = document.createElement("div");
-            userMessage.className = "chat-message";
+            userMessage.className = "chat-message user-message";
             userMessage.textContent = message;
             chatBox.appendChild(userMessage);
 
-            // Fetch Bot Response
-            let response = await fetch("http://127.0.0.1:5000/chatbot", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: message })
-            });
+            // Typing Indicator
+            let typingIndicator = document.createElement("div");
+            typingIndicator.className = "typing-indicator";
+            typingIndicator.textContent = "Chatbot is typing...";
+            chatBox.appendChild(typingIndicator);
 
-            let data = await response.json();
+            // Scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-            // Bot Response
-            let botMessage = document.createElement("div");
-            botMessage.className = "chat-message bot-message";
-            botMessage.textContent = data.reply;
-            chatBox.appendChild(botMessage);
+            try {
+                let response = await fetch("http://127.0.0.1:5000/chatbot", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: message })
+                });
+
+                let data = await response.json();
+
+                // Remove typing indicator
+                chatBox.removeChild(typingIndicator);
+
+                // Bot Response
+                let botMessage = document.createElement("div");
+                botMessage.className = "chat-message bot-message";
+                botMessage.textContent = data.reply;
+                chatBox.appendChild(botMessage);
+            } catch (error) {
+                chatBox.removeChild(typingIndicator);
+                let errorMessage = document.createElement("div");
+                errorMessage.className = "chat-message bot-message";
+                errorMessage.textContent = "Error: Could not reach the chatbot.";
+                chatBox.appendChild(errorMessage);
+            }
+
+            // Scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
 
             // Clear input
             inputField.value = "";
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
 </body>
 </html>
-

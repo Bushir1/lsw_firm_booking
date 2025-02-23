@@ -6,6 +6,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import fitz  # PyMuPDF
 import openai
+import os
 
 app = Flask(__name__)
 CORS(app)  # Allow frontend to access this backend
@@ -13,6 +14,9 @@ CORS(app)  # Allow frontend to access this backend
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///appointments.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Set OpenAI API key
+openai.api_key = "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"
 
 # Initialize the database
 db = SQLAlchemy(app)
@@ -170,17 +174,21 @@ def chatbot():
         user_message = request.json.get('message', '')
 
         # Query OpenAI with PDF content as context
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a chatbot that only answers questions based on the provided legal document."},
-                {"role": "user", "content": f"Here is the legal document excerpt: {pdf_text[:3000]}..."},
-                {"role": "user", "content": user_message}
-            ]
-        )
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a chatbot that only answers questions based on the provided legal document."},
+                    {"role": "user", "content": f"Here is the legal document excerpt: {pdf_text[:3000]}..."},
+                    {"role": "user", "content": user_message}
+                ]
+            )
 
-        reply = response['choices'][0]['message']['content']
-        return jsonify({"reply": reply})
+            reply = response['choices'][0]['message']['content']
+            return jsonify({"reply": reply})
+        except Exception as e:
+            print(f"Error reaching OpenAI API: {e}")
+            return jsonify({"error": "Could not reach the chatbot"}), 500
 
     return render_template('chatbot.html')
 

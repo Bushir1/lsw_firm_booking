@@ -12,6 +12,14 @@
         <nav>
             <a href="/">Home</a>
             <a href="/book">Book Appointment</a>
+            {% if current_user.is_authenticated %}
+                <a href="/logout">Logout</a>
+            {% else %}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {% endif %}
+            <!-- Add Chatbot Link -->
+            <a href="/chatbot" target="_blank">Chatbot</a>
         </nav>
     </header>
     <main>

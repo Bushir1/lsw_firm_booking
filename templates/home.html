@@ -1,8 +1,18 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% if current_user.is_authenticated %}
+    <h2>Hello, {{ current_user.name }}!</h2>
+{% else %}
+    <h2>Welcome to Our Law Firm</h2>
+{% endif %}
+
 <h2>About Our Law Firm</h2>
 <p>We provide expert legal services in various fields, specializing in immigration law. Our experienced attorneys are dedicated to helping you navigate complex immigration processes with confidence.</p>
+
+<div id="chatbot-container">
+    <iframe src="{{ url_for('chatbot') }}" width="100%" height="500px" style="border:none;"></iframe>
+</div>
 
 <h3>Why Choose Us?</h3>
 <ul>

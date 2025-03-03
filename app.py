@@ -5,22 +5,30 @@ from datetime import datetime, time
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import fitz  # PyMuPDF
-import openai
+import requests
 import os
+from dotenv import load_dotenv
+from openai import OpenAI
+from flask_migrate import Migrate
 
+
+# Initialize Flask app
 app = Flask(__name__)
 CORS(app)  # Allow frontend to access this backend
 
-app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///appointments.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Load environment variables from .env file
+load_dotenv()
 
-# Set OpenAI API key
-openai.api_key = "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"
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///appointments.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Avoids unnecessary warnings
+# Set a secret key for session management (required for flash messages & Flask-Login)
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "your_default_secret_key_here")
+
 
 # Initialize the database
 db = SQLAlchemy(app)
-
+migrate = Migrate(app, db)
 # Initialize Flask-Login
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -49,10 +57,19 @@ class Appointment(db.Model):
     message = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+# Add this model to your existing models
+class ChatHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_message = db.Column(db.String(500), nullable=False)
+    bot_reply = db.Column(db.String(500), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
 # Load a user for Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))  # ✅ Correct for SQLAlchemy 2.0
+
 
 # Home route with user greeting
 @app.route('/')
@@ -123,8 +140,8 @@ def book():
         try:
             date = datetime.strptime(date_str, '%Y-%m-%d').date()
             appointment_time = datetime.strptime(time_str, '%H:%M').time()
-        except ValueError:
-            flash('Invalid date or time format. Please use the correct format.', 'danger')
+        except ValueError as e:
+            flash(f'Invalid date or time format: {e}. Please use the correct format.', 'danger')
             return redirect(url_for('book'))
 
         # Validate day of the week (Monday to Friday)
@@ -167,43 +184,78 @@ def appointments():
     user_appointments = Appointment.query.filter_by(user_id=current_user.id).order_by(Appointment.date, Appointment.time).all()
     return render_template('appointments.html', appointments=user_appointments)
 
-# Chatbot route
-@app.route('/chatbot', methods=['GET', 'POST'])
+# Read content from LAW.txt with proper encoding handling
+law_text = ""
+if os.path.exists("LAW.txt"):
+    try:
+        with open("LAW.txt", "r", encoding="utf-8") as file:
+            law_text = file.read()
+    except UnicodeDecodeError:
+        with open("LAW.txt", "r", encoding="latin-1") as file:
+            law_text = file.read()
+else:
+    print("Warning: LAW.txt file not found.")
+
+
+
+@app.route("/chatbot")
+def chat():
+    return render_template("chatbot.html")
+
+# Chatbot API
+@app.route("/chatbot", methods=["POST"])
 def chatbot():
-    if request.method == 'POST':
-        user_message = request.json.get('message', '')
+    data = request.json
+    user_message = data.get("message", "")
 
-        # Query OpenAI with PDF content as context
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "You are a chatbot that only answers questions based on the provided legal document."},
-                    {"role": "user", "content": f"Here is the legal document excerpt: {pdf_text[:3000]}..."},
-                    {"role": "user", "content": user_message}
-                ]
+    if not user_message:
+        return jsonify({"reply": "Please enter a message."}), 400
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an AI assistant trained to provide legal information based on the following text:"},
+                {"role": "system", "content": law_text},
+                {"role": "user", "content": user_message}
+            ],
+        )
+        bot_reply = response.choices[0].message.content
+
+        # Save the conversation to the database
+        if current_user.is_authenticated:
+            new_chat = ChatHistory(
+                user_id=current_user.id,
+                user_message=user_message,
+                bot_reply=bot_reply
             )
+            db.session.add(new_chat)
+            db.session.commit()
 
-            reply = response['choices'][0]['message']['content']
-            return jsonify({"reply": reply})
-        except Exception as e:
-            print(f"Error reaching OpenAI API: {e}")
-            return jsonify({"error": "Could not reach the chatbot"}), 500
+    except Exception as e:
+        return jsonify({"reply": f"Error: {str(e)}"}), 500
 
-    return render_template('chatbot.html')
+    return jsonify({"reply": bot_reply})
 
-# Load PDF and extract text
-def extract_text_from_pdf(pdf_path):
-    doc = fitz.open(pdf_path)
-    text = ""
-    for page in doc:
-        text += page.get_text("text") + "\n"
-    return text
+@app.route("/chatbot-history")
+@login_required
+def chat_history():
+    user_chats = ChatHistory.query.filter_by(user_id=current_user.id).order_by(ChatHistory.timestamp).all()
+    chat_data = [{"user_message": chat.user_message, "bot_reply": chat.bot_reply} for chat in user_chats]
+    return jsonify(chat_data)
 
-# Load extracted PDF content from "LAW.pdf"
-pdf_text = extract_text_from_pdf("LAW.pdf")
+@app.route("/clear-chat-history", methods=["POST"])
+@login_required
+def clear_chat_history():
+    try:
+        ChatHistory.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
+        return jsonify({"success": True, "message": "Chat history cleared successfully."})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()  # Ensure database is created
+        if not os.path.exists('instance/appointments.db'):  # Check if DB exists
+            db.create_all()  # Create database if it doesn't exist
     app.run(debug=True)

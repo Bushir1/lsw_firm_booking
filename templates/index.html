@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #chat-box { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+        .message { margin-bottom: 10px; }
+        .user { color: blue; }
+        .bot { color: green; }
+    </style>
+</head>
+<body>
+    <h2>Chatbot</h2>
+    <div id="chat-box"></div>
+    <form id="chat-form">
+        <input type="text" id="chat-input" placeholder="Type a message..." required>
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const chatForm = document.getElementById("chat-form");
+            const chatInput = document.getElementById("chat-input");
+            const chatBox = document.getElementById("chat-box");
+
+            chatForm.addEventListener("submit", async function (event) {
+                event.preventDefault();
+                const userMessage = chatInput.value.trim();
+                if (userMessage === "") return;
+
+                displayMessage("You", userMessage, "user");
+
+                try {
+                    const response = await fetch("/chatbot", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message: userMessage })
+                    });
+
+                    const data = await response.json();
+                    displayMessage("Bot", data.reply, "bot");
+                } catch (error) {
+                    console.error("Error:", error);
+                    displayMessage("Bot", "Sorry, something went wrong.", "bot");
+                }
+
+                chatInput.value = "";
+            });
+
+            function displayMessage(sender, message, className) {
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("message", className);
+                messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+                chatBox.appendChild(messageElement);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>

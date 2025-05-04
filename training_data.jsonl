@@ -1,0 +1,2 @@
+{"messages": [{"role": "system", "content": "You are a legal expert assistant."}, {"role": "user", "content": "What is the procedure for filing a lawsuit?"}, {"role": "assistant", "content": "To file a lawsuit, you need to submit a complaint to the appropriate court, pay the filing fees, and serve the defendant."}]}
+{"messages": [{"role": "user", "content": "What is the statute of limitations for contract disputes?"}, {"role": "assistant", "content": "The statute of limitations for contract disputes varies by jurisdiction. In many places, it ranges from 3 to 6 years."}]}

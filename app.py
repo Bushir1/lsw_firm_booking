@@ -38,7 +38,18 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)  # Storing hashed password
+    email = db.Column(db.String(120), unique=True, nullable=False)  # Add email field
+    first_name = db.Column(db.String(100), nullable=False)  # Add first name
+    last_name = db.Column(db.String(100), nullable=False)  # Add last name
+    dob = db.Column(db.Date, nullable=False)  # Add date of birth
+    nationality = db.Column(db.String(100), nullable=False)  # Add nationality
+    phone = db.Column(db.String(15), nullable=False)  # Add phone number
+    address = db.Column(db.String(255), nullable=True)  # Add address field (optional)
     appointments = db.relationship('Appointment', backref='user', lazy=True)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
 
 class Query(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,20 +91,52 @@ def home():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # Extract data from the form
+        first_name = request.form['name']
+        last_name = request.form['surname']
+        dob = request.form['dob']
+        nationality = request.form['nationality']
+        phone = request.form['phone']
+        email = request.form['email']
         username = request.form['username']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        address = request.form.get('address', '')  # Optional field
 
-        # Check if the username already exists
+        # Check if the username or email already exists
         existing_user = User.query.filter_by(username=username).first()
+        existing_email = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Username already exists. Please choose a different one.', 'danger')
             return redirect(url_for('register'))
+        if existing_email:
+            flash('Email already exists. Please use a different one.', 'danger')
+            return redirect(url_for('register'))
 
-        # Hash password before storing
+        # Check password confirmation
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return redirect(url_for('register'))
+
+        # Hash the password before storing
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        new_user = User(username=username, password=hashed_password)
+
+        # Create a new user and store it in the database
+        new_user = User(
+            username=username,
+            password=hashed_password,
+            first_name=first_name,
+            last_name=last_name,
+            dob=dob,
+            nationality=nationality,
+            phone=phone,
+            email=email,
+            address=address
+        )
+
         db.session.add(new_user)
         db.session.commit()
+
         flash('Registration successful! Please log in.', 'success')
         return redirect(url_for('login'))
 

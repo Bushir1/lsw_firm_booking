@@ -10,6 +10,8 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 from flask_migrate import Migrate
+from datetime import datetime, time, date
+
 
 
 # Initialize Flask app
@@ -20,8 +22,8 @@ CORS(app)  # Allow frontend to access this backend
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///appointments.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Avoids unnecessary warnings
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:benjamin@localhost:3306/my_database'
+
 # Set a secret key for session management (required for flash messages & Flask-Login)
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "your_default_secret_key_here")
 
@@ -60,13 +62,21 @@ class Query(db.Model):
 
 # Define the Appointment model
 class Appointment(db.Model):
+    __tablename__ = 'appointments'  # Explicitly set the table name
+    
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)
+    phone_number = db.Column(db.String(20), nullable=False)  # Add phone_number field
     date = db.Column(db.Date, nullable=False)
     time = db.Column(db.Time, nullable=False)
     message = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp(), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<Appointment {self.name} on {self.date}>'
+
 
 # Add this model to your existing models
 class ChatHistory(db.Model):
@@ -175,45 +185,48 @@ def book():
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
+        phone_number = request.form['phone_number']
         date_str = request.form['date']
         time_str = request.form['time']
         message = request.form['message']
 
-        # Convert date and time strings to appropriate types
+        # Convert date and time strings to proper types
         try:
-            date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             appointment_time = datetime.strptime(time_str, '%H:%M').time()
         except ValueError as e:
             flash(f'Invalid date or time format: {e}. Please use the correct format.', 'danger')
             return redirect(url_for('book'))
 
-        # Validate day of the week (Monday to Friday)
-        if date.weekday() >= 5:  # 5 = Saturday, 6 = Sunday
+        # Only allow Monday–Friday
+        if appointment_date.weekday() >= 5:
             flash('Appointments are only available from Monday to Friday.', 'danger')
             return redirect(url_for('book'))
 
-        # Validate time (9:00 AM to 5:00 PM)
-        start_time = time(9, 0)  # 9:00 AM
-        end_time = time(17, 0)   # 5:00 PM
-        if appointment_time < start_time or appointment_time > end_time:
+        # Only allow times from 9:00 AM to 5:00 PM
+        if not (time(9, 0) <= appointment_time <= time(17, 0)):
             flash('Appointments are only available between 9:00 AM and 5:00 PM.', 'danger')
             return redirect(url_for('book'))
 
-        # Save to database
+        # Save appointment
         new_appointment = Appointment(
             name=name,
             email=email,
-            date=date,
+            phone_number=phone_number,
+            date=appointment_date,
             time=appointment_time,
             message=message,
-            user_id=current_user.id  # Associate appointment with the current user
+            user_id=current_user.id
         )
         db.session.add(new_appointment)
         db.session.commit()
+
         flash('Appointment booked successfully!', 'success')
         return redirect(url_for('confirmation'))
 
-    return render_template('book.html')
+    # GET request: send today’s date for min=date in form
+    today = date.today().isoformat()
+    return render_template('book.html', today=today)
 
 # Confirmation route
 @app.route('/confirmation')
@@ -224,7 +237,7 @@ def confirmation():
 @app.route('/appointments')
 @login_required
 def appointments():
-    user_appointments = Appointment.query.filter_by(user_id=current_user.id).order_by(Appointment.date, Appointment.time).all()
+    user_appointments = Appointments.query.filter_by(user_id=current_user.id).order_by(Appointments.date, Appointment.time).all()
     return render_template('appointments.html', appointments=user_appointments)
 
 # Read content from LAW.txt with proper encoding handling

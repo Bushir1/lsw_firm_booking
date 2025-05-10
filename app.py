@@ -14,6 +14,7 @@ from datetime import datetime, time, date
 
 
 
+
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)  # Allow frontend to access this backend
@@ -23,6 +24,8 @@ load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:benjamin@localhost:3306/my_database'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:newpassword@localhost:3306/lsw_firm_db'
+
 
 # Set a secret key for session management (required for flash messages & Flask-Login)
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "your_default_secret_key_here")

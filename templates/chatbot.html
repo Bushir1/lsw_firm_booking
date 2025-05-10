@@ -1,226 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chatbot</title>
+  <style>
+    /* Background watermark */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background-image: url('https://img.icons8.com/?size=100&id=2112&format=png&color=000000');
+      background-repeat: repeat;
+      background-size: 40px;
+      opacity: 0.08;
+      z-index: -1;
+      pointer-events: none;
+    }
 
-        .chat-container {
-            width: 90%;
-            max-width: 500px;
-            height: 600px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            position: relative;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(to bottom, #f5f7fa 0%, #e2e8f0 100%);
+      box-sizing: border-box;
+    }
 
-        .chat-box {
-            flex-grow: 1;
-            overflow-y: auto;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            flex-direction: column;
-        }
+    .chat-container {
+      width: 90%;
+      max-width: 500px;
+      max-height: 95vh;
+      background-color: #ffffff;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-        .chat-input-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .chat-box {
+      flex-grow: 1;
+      overflow-y: auto;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+    }
 
-        .chat-input {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
-        }
+    .chat-input-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        .send-button {
-            padding: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-left: 10px;
-        }
+    .chat-input {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
 
-        .chat-message {
-            padding: 10px;
-            border-radius: 10px;
-            margin: 5px 0;
-            max-width: 70%;
-        }
+    .send-button {
+      padding: 10px;
+      background-color: #1b263b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 10px;
+      transition: background-color 0.3s ease;
+    }
 
-        .user-message {
-            background-color: #007bff;
-            color: white;
-            align-self: flex-end;
-        }
+    .send-button:hover {
+      background-color: #415a77;
+    }
 
-        .bot-message {
-            background-color: #ccc;
-            color: black;
-            align-self: flex-start;
-        }
+    .chat-message {
+      padding: 10px;
+      border-radius: 10px;
+      margin: 5px 0;
+      max-width: 70%;
+    }
 
-        .typing-indicator {
-            font-size: 14px;
-            color: #555;
-            font-style: italic;
-            margin: 5px 0;
-        }
+    .user-message {
+      background-color: #1b263b;
+      color: white;
+      align-self: flex-end;
+    }
 
-        .clear-button {
-            padding: 10px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
-            width: 100%;
-        }
-    </style>
+    .bot-message {
+      background-color: #e2e8f0;
+      color: black;
+      align-self: flex-start;
+    }
+
+    .typing-indicator {
+      font-size: 14px;
+      color: #555;
+      font-style: italic;
+      margin: 5px 0;
+    }
+
+    .clear-button {
+      padding: 10px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    @media (max-height: 600px) {
+      .chat-container {
+        max-height: 90vh;
+        padding: 15px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="chat-container">
-        <h3>Chatbot</h3>
-        <div class="chat-box" id="chat-box">
-            <!-- Chat history will be loaded here -->
-        </div>
-        <div class="chat-input-container">
-            <input type="text" id="chat-input" class="chat-input" placeholder="Type a message...">
-            <button class="send-button" onclick="sendMessage()">Send</button>
-        </div>
-        <button class="clear-button" onclick="clearChat()">Clear Chat</button>
+  <div class="chat-container">
+    <h3>Chatbot</h3>
+    <div class="chat-box" id="chat-box">
+      <!-- Chat history will be loaded here -->
     </div>
+    <div class="chat-input-container">
+      <input type="text" id="chat-input" class="chat-input" placeholder="Type a message...">
+      <button class="send-button" onclick="sendMessage()">Send</button>
+    </div>
+    <button class="clear-button" onclick="clearChat()">Clear Chat</button>
+  </div>
 
-    <script>
-        // Fetch and display chat history when the page loads
-        window.onload = async function () {
-            try {
-                let response = await fetch("/chat-history", {
-                    method: "GET",
-                    headers: { "Content-Type": "application/json" },
-                });
-
-                let data = await response.json();
-                let chatBox = document.getElementById("chat-box");
-
-                // Clear the chat box before loading history
-                chatBox.innerHTML = "";
-
-                // Load each message into the chat box
-                data.forEach(chat => {
-                    // User Message
-                    let userMessage = document.createElement("div");
-                    userMessage.className = "chat-message user-message";
-                    userMessage.textContent = chat.user_message;
-                    chatBox.appendChild(userMessage);
-
-                    // Bot Message
-                    let botMessage = document.createElement("div");
-                    botMessage.className = "chat-message bot-message";
-                    botMessage.textContent = chat.bot_reply;
-                    chatBox.appendChild(botMessage);
-                });
-
-                // Scroll to the bottom of the chat box
-                chatBox.scrollTop = chatBox.scrollHeight;
-            } catch (error) {
-                console.error("Error loading chat history:", error);
-            }
-        };
-
-        // Send a message to the chatbot
-        async function sendMessage() {
-            let inputField = document.getElementById("chat-input");
-            let message = inputField.value.trim();
-            if (message === "") return;
-
-            let chatBox = document.getElementById("chat-box");
-
-            // User Message
-            let userMessage = document.createElement("div");
-            userMessage.className = "chat-message user-message";
-            userMessage.textContent = message;
-            chatBox.appendChild(userMessage);
-
-            // Typing Indicator
-            let typingIndicator = document.createElement("div");
-            typingIndicator.className = "typing-indicator";
-            typingIndicator.textContent = "Chatbot is typing...";
-            chatBox.appendChild(typingIndicator);
-
-            // Scroll to bottom
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            try {
-                let response = await fetch("/chatbot", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: message })
-                });
-
-                let data = await response.json();
-
-                // Remove typing indicator
-                chatBox.removeChild(typingIndicator);
-
-                // Bot Response
-                let botMessage = document.createElement("div");
-                botMessage.className = "chat-message bot-message";
-                botMessage.textContent = data.reply;
-                chatBox.appendChild(botMessage);
-            } catch (error) {
-                chatBox.removeChild(typingIndicator);
-                let errorMessage = document.createElement("div");
-                errorMessage.className = "chat-message bot-message";
-                errorMessage.textContent = "Error: Could not reach the chatbot.";
-                chatBox.appendChild(errorMessage);
-            }
-
-            // Scroll to bottom
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            // Clear input
-            inputField.value = "";
-        }
-
-        // Clear the chat history in the browser (frontend only)
-        function clearChat() {
-            let chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML = '<div class="chat-message bot-message">Hello! Ask me anything from the document.</div>';
-        }
-
-        // Allow pressing Enter to send a message
-        document.getElementById("chat-input").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                sendMessage();
-            }
+  <script>
+    window.onload = async function () {
+      try {
+        let response = await fetch("/chat-history", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
         });
-    </script>
+
+        let data = await response.json();
+        let chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = "";
+
+        data.forEach(chat => {
+          let userMessage = document.createElement("div");
+          userMessage.className = "chat-message user-message";
+          userMessage.textContent = chat.user_message;
+          chatBox.appendChild(userMessage);
+
+          let botMessage = document.createElement("div");
+          botMessage.className = "chat-message bot-message";
+          botMessage.textContent = chat.bot_reply;
+          chatBox.appendChild(botMessage);
+        });
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (error) {
+        console.error("Error loading chat history:", error);
+      }
+    };
+
+    async function sendMessage() {
+      let inputField = document.getElementById("chat-input");
+      let message = inputField.value.trim();
+      if (message === "") return;
+
+      let chatBox = document.getElementById("chat-box");
+
+      let userMessage = document.createElement("div");
+      userMessage.className = "chat-message user-message";
+      userMessage.textContent = message;
+      chatBox.appendChild(userMessage);
+
+      let typingIndicator = document.createElement("div");
+      typingIndicator.className = "typing-indicator";
+      typingIndicator.textContent = "Chatbot is typing...";
+      chatBox.appendChild(typingIndicator);
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        let response = await fetch("/chatbot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: message })
+        });
+
+        let data = await response.json();
+
+        chatBox.removeChild(typingIndicator);
+
+        let botMessage = document.createElement("div");
+        botMessage.className = "chat-message bot-message";
+        botMessage.textContent = data.reply;
+        chatBox.appendChild(botMessage);
+      } catch (error) {
+        chatBox.removeChild(typingIndicator);
+        let errorMessage = document.createElement("div");
+        errorMessage.className = "chat-message bot-message";
+        errorMessage.textContent = "Error: Could not reach the chatbot.";
+        chatBox.appendChild(errorMessage);
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+      inputField.value = "";
+    }
+
+    function clearChat() {
+      let chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML = '<div class="chat-message bot-message">Hello! Ask me anything from the document.</div>';
+    }
+
+    document.getElementById("chat-input").addEventListener("keypress", function(event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
 </body>
 </html>

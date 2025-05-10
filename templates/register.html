@@ -1,69 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <script>
-        function validateDOB() {
-            const dob = document.getElementById("dob").value;
-            const dobDate = new Date(dob);
-            const today = new Date();
-            const age = today.getFullYear() - dobDate.getFullYear();
-            const m = today.getMonth() - dobDate.getMonth();
-
-            // Check if the user is under 18
-            if (age < 18 || (age === 18 && m < 0) || (age === 18 && m === 0 && today.getDate() < dobDate.getDate())) {
-                alert("You must be at least 18 years old to register.");
-                return false;
-            }
-            return true;
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-key="register-title">Register</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    function validateDOB() {
+      const dob = document.getElementById("dob").value;
+      const dobDate = new Date(dob);
+      const today = new Date();
+      const age = today.getFullYear() - dobDate.getFullYear();
+      const m = today.getMonth() - dobDate.getMonth();
+      if (age < 18 || (age === 18 && m < 0) || (age === 18 && m === 0 && today.getDate() < dobDate.getDate())) {
+        alert("You must be at least 18 years old to register.");
+        return false;
+      }
+      return true;
+    }
+  </script>
 </head>
 <body>
-    <header>
-        <h1>Register</h1>
-        <nav>
-            <a href="/">Home</a>
-            <a href="/login">Login</a>
-        </nav>
-    </header>
-    <main>
-        <form method="POST" action="{{ url_for('register') }}" onsubmit="return validateDOB()">
-            <label for="name">First Name:</label>
-            <input type="text" id="name" name="name" required>
+  <header>
+    <h1 data-key="register-title">Register</h1>
+    <nav>
+      <a href="/" data-key="home">Home</a>
+      <a href="/login" data-key="login">Login</a>
+    </nav>
+  </header>
+  <main>
+    <form method="POST" action="{{ url_for('register') }}" onsubmit="return validateDOB()">
+      <label for="name" data-key="label-firstname">First Name:</label>
+      <input type="text" id="name" name="name" required placeholder="Enter your first name" data-key="placeholder-firstname">
 
-            <label for="surname">Last Name:</label>
-            <input type="text" id="surname" name="surname" required>
+      <label for="surname" data-key="label-lastname">Last Name:</label>
+      <input type="text" id="surname" name="surname" required placeholder="Enter your last name" data-key="placeholder-lastname">
 
-            <label for="dob">Date of Birth:</label>
-            <input type="date" id="dob" name="dob" required>
+      <label for="dob" data-key="label-dob">Date of Birth:</label>
+      <input type="date" id="dob" name="dob" required>
 
-            <label for="nationality">Nationality:</label>
-            <input type="text" id="nationality" name="nationality" required>
+      <label for="nationality" data-key="label-nationality">Nationality:</label>
+      <input type="text" id="nationality" name="nationality" required placeholder="Enter your nationality" data-key="placeholder-nationality">
 
-            <label for="phone">Phone Number:</label>
-            <input type="tel" id="phone" name="phone" required pattern="^\+?[0-9]{1,4}?[0-9]{6,12}$" placeholder="e.g., +1234567890">
+      <label for="phone" data-key="label-phone">Phone Number:</label>
+      <input type="tel" id="phone" name="phone" required pattern="^\+?[0-9]{1,4}?[0-9]{6,12}$" placeholder="e.g., +1234567890" data-key="placeholder-phone">
 
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
+      <label for="email" data-key="label-email">Email:</label>
+      <input type="email" id="email" name="email" required placeholder="Enter your email" data-key="placeholder-email">
 
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
+      <label for="username" data-key="label-username">Username:</label>
+      <input type="text" id="username" name="username" required placeholder="Create a username" data-key="placeholder-username">
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
+      <label for="password" data-key="label-password">Password:</label>
+      <input type="password" id="password" name="password" required placeholder="Enter your password" data-key="placeholder-password">
 
-            <label for="confirm-password">Confirm Password:</label>
-            <input type="password" id="confirm-password" name="confirm_password" required>
+      <label for="confirm-password" data-key="label-confirm">Confirm Password:</label>
+      <input type="password" id="confirm-password" name="confirm_password" required placeholder="Confirm your password" data-key="placeholder-confirm">
 
-            <label for="address">Address:</label>
-            <input type="text" id="address" name="address">
+      <label for="address" data-key="label-address">Address:</label>
+      <input type="text" id="address" name="address" placeholder="Optional address" data-key="placeholder-address">
 
-            <button type="submit">Register</button>
-        </form>
-    </main>
+      <button type="submit" data-key="button-register">Register</button>
+    </form>
+  </main>
 </body>
 </html>

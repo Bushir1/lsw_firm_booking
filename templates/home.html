@@ -1,39 +1,81 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% if current_user.is_authenticated %}
-    <h2>Hello, {{ current_user.name }}!</h2>
-{% else %}
-    <h2>Welcome to Our Law Firm</h2>
-{% endif %}
+<div class="container">
+  {% if current_user.is_authenticated %}
+    <h2 class="greeting">Hello, {{ current_user.name }}!</h2>
+  {% else %}
+    <h2 class="greeting">Welcome to Hamilton & Associates Law Firm</h2>
+  {% endif %}
 
-<h2>About Our Law Firm</h2>
-<p>We provide expert legal services in various fields, specializing in immigration law. Our experienced attorneys are dedicated to helping you navigate complex immigration processes with confidence.</p>
+  <section class="section animated-section frame-box" style="animation-delay: 0.2s;">
+    <h2>About Our Law Firm</h2>
+    <p>
+      We provide expert legal services across a variety of practice areas, with a strong focus on immigration law. 
+      Our seasoned attorneys are committed to guiding you through complex legal challenges with confidence, clarity, and care.
+    </p>
+  </section>
 
-<div id="chatbot-container">
-    <iframe src="{{ url_for('chatbot') }}" width="100%" height="500px" style="border:none;"></iframe>
+  <!-- ✅ Chatbot section without frame-box -->
+  <section class="section animated-section" style="animation-delay: 0.4s;">
+    <h3>Your Virtual Legal Assistant</h3>
+    <p>Have a question? Try our chatbot below — it's available 24/7 to help you with immigration topics and more.</p>
+    <div id="chatbot-container" style="margin: 20px 0;">
+      <iframe src="{{ url_for('chatbot') }}" width="100%" height="500px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>
+    </div>
+  </section>
+
+  <section class="section animated-section frame-box" style="animation-delay: 0.6s;">
+    <h3>Why Choose Us?</h3>
+    <ul>
+      <li><strong>20+ years of experience</strong> in immigration and general legal practice.</li>
+      <li><strong>Personalized legal strategies</strong> for your specific case.</li>
+      <li><strong>Multilingual support</strong> for global clients.</li>
+      <li><strong>Proven success rate</strong> with complex immigration cases.</li>
+    </ul>
+  </section>
+
+  <section class="section animated-section frame-box" style="animation-delay: 0.8s;">
+    <h3>Our Services Include:</h3>
+    <ul>
+      <li>Visa applications & renewals</li>
+      <li>Green card processing</li>
+      <li>Citizenship & naturalization</li>
+      <li>Family- and employment-based immigration</li>
+      <li>Deportation defense & appeals</li>
+    </ul>
+  </section>
+
+  <!-- ✅ Client Testimonials -->
+  <section class="section animated-section frame-box" style="animation-delay: 0.9s;">
+    <h3>What Our Clients Say</h3>
+
+    <blockquote>
+      "Hamilton & Associates helped me secure my visa quickly and professionally."
+    </blockquote>
+    <cite>– Ana K., Boston</cite>
+
+    <hr style="margin: 20px 0; border-color: #a3cef1;">
+
+    <blockquote>
+      "Their legal team made the green card process feel easy. Highly recommended!"
+    </blockquote>
+    <cite>– Mateo D., New York</cite>
+
+    <hr style="margin: 20px 0; border-color: #a3cef1;">
+
+    <blockquote>
+      "Very responsive, clear communication, and truly cared about my case."
+    </blockquote>
+    <cite>– Lira S., Chicago</cite>
+  </section>
+
+  <section class="section animated-section frame-box" style="animation-delay: 1s;" id="contact-section">
+    <h3>Contact Us</h3>
+    <p>
+      Ready to take the next step? Book a consultation to speak with one of our legal experts today. 
+      We're here to help you succeed.
+    </p>
+  </section>
 </div>
-
-<h3>Why Choose Us?</h3>
-<ul>
-    <li>Over 20 years of experience in immigration law.</li>
-    <li>Personalized legal advice tailored to your unique situation.</li>
-    <li>Multilingual support to assist clients from diverse backgrounds.</li>
-    <li>A proven track record of successful cases.</li>
-</ul>
-
-<h3>Our Services</h3>
-<p>We assist with:</p>
-<ul>
-    <li>Visa applications and renewals</li>
-    <li>Green card processing</li>
-    <li>Citizenship and naturalization</li>
-    <li>Family-based immigration</li>
-    <li>Employment-based immigration</li>
-    <li>Deportation defense and appeals</li>
-</ul>
-
-<h3>Contact Us</h3>
-<p>Have questions or need assistance? Book an appointment today to discuss your case with our legal experts. We're here to help!</p>
-
 {% endblock %}

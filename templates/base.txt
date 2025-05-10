@@ -80,43 +80,18 @@
           <li data-key="service5">Deportation defense & appeals</li>
         </ul>
       </section>
-      
-      <section class="section animated-section frame-box" style="animation-delay: 0.9s;">
-        <h3 data-key="testimonials-title">What Our Clients Say</h3>
-      
-        <blockquote data-key="testimonial1">"Hamilton & Associates helped me secure my visa quickly and professionally."</blockquote>
-        <cite data-key="testimonial1-cite">– Ana K., London</cite>
-      
-        <hr style="margin: 20px 0; border-color: #a3cef1;">
-      
-        <blockquote data-key="testimonial2">"Their legal team made the green card process feel easy. Highly recommended!"</blockquote>
-        <cite data-key="testimonial2-cite">– Mateo D., Manchester</cite>
-      
-        <hr style="margin: 20px 0; border-color: #a3cef1;">
-      
-        <blockquote data-key="testimonial3">"Very responsive, clear communication, and truly cared about my case."</blockquote>
-        <cite data-key="testimonial3-cite">– Lira S., Birmingham</cite>
-      </section>
-      
+
       <section class="section animated-section frame-box" style="animation-delay: 1s;" id="contact-section">
         <h3 data-key="contact-title">Contact Us</h3>
         <p data-key="contact-text">
           Ready to take the next step? Book a consultation to speak with one of our legal experts today.
         </p>
-        <ul class="contact-details">
-          <li><strong data-key="contact-phone-label">Phone:</strong> <a href="tel:+1234567890">+1 (234) 567-890</a></li>
-          <li><strong data-key="contact-email-label">Email:</strong> <a href="mailto:info@yourfirm.com">info@yourfirm.com</a></li>
-          <li><strong data-key="contact-address-label">Address:</strong> <span>1 King's Cross Road, London, WC1X 9HX, UK</span></li>
-        </ul>
-        <div style="margin-top: 20px;">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d19816.46513333895!2d-0.12775845!3d51.5305391!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48761b3679e6b1c7%3A0xf7f9f4d7a42fa4ff!2sKing's%20Cross%2C%20London!5e0!3m2!1sen!2suk!4v1715181511517!5m2!1sen!2suk"
-            width="100%" height="300" style="border:0; border-radius: 8px;" allowfullscreen="" loading="lazy">
-          </iframe>
-        </div>
       </section>
     </div>
   </main>
+
+  <!-- Floating Contact Button -->
+  <a href="#contact-section" class="floating-contact-btn" data-key="contact">Contact Us</a>
 
   <!-- Scroll Animation Script -->
   <script>
@@ -148,6 +123,7 @@
         logout: "Logout",
         register: "Register",
         chatbot: "Chatbot",
+        contact: "Contact Us",
         "about-title": "About Our Law Firm",
         "about-text": "We provide expert legal services across a variety of practice areas, with a strong focus on immigration law.",
         "virtual-title": "Your Virtual Legal Assistant",
@@ -163,18 +139,8 @@
         "service3": "Citizenship & naturalization",
         "service4": "Family & employment immigration",
         "service5": "Deportation defense & appeals",
-        "testimonials-title": "What Our Clients Say",
-        "testimonial1": "Hamilton & Associates helped me secure my visa quickly and professionally.",
-        "testimonial1-cite": "– Ana K., London",
-        "testimonial2": "Their legal team made the green card process feel easy. Highly recommended!",
-        "testimonial2-cite": "– Mateo D., Manchester",
-        "testimonial3": "Very responsive, clear communication, and truly cared about my case.",
-        "testimonial3-cite": "– Lira S., Birmingham",
         "contact-title": "Contact Us",
-        "contact-text": "Ready to take the next step? Book a consultation to speak with one of our legal experts today.",
-        "contact-phone-label": "Phone:",
-        "contact-email-label": "Email:",
-        "contact-address-label": "Address:"
+        "contact-text": "Ready to take the next step? Book a consultation to speak with one of our legal experts today."
       },
       es: {
         title: "Reserva de Bufete",
@@ -187,6 +153,7 @@
         logout: "Cerrar Sesión",
         register: "Registrarse",
         chatbot: "Asistente Virtual",
+        contact: "Contáctenos",
         "about-title": "Sobre Nuestro Bufete",
         "about-text": "Ofrecemos servicios legales expertos en varias áreas, centrados en la ley de inmigración.",
         "virtual-title": "Su Asistente Legal Virtual",
@@ -202,18 +169,8 @@
         "service3": "Ciudadanía y naturalización",
         "service4": "Inmigración familiar y laboral",
         "service5": "Defensa contra deportación y apelaciones",
-        "testimonials-title": "Lo Que Dicen Nuestros Clientes",
-        "testimonial1": "Hamilton & Associates me ayudó a obtener mi visa de manera rápida y profesional.",
-        "testimonial1-cite": "– Ana K., Londres",
-        "testimonial2": "Su equipo legal hizo que el proceso de la tarjeta verde fuera fácil. ¡Muy recomendado!",
-        "testimonial2-cite": "– Mateo D., Manchester",
-        "testimonial3": "Muy receptivos, comunicación clara y realmente se preocuparon por mi caso.",
-        "testimonial3-cite": "– Lira S., Birmingham",
         "contact-title": "Contáctenos",
-        "contact-text": "¿Listo para avanzar? Programe una consulta con nuestros expertos legales hoy.",
-        "contact-phone-label": "Teléfono:",
-        "contact-email-label": "Correo electrónico:",
-        "contact-address-label": "Dirección:"
+        "contact-text": "¿Listo para avanzar? Programe una consulta con nuestros expertos legales hoy."
       },
       sq: {
         title: "Rezervimi Ligjor",
@@ -226,6 +183,7 @@
         logout: "Dil",
         register: "Regjistrohu",
         chatbot: "Asistent Virtual",
+        contact: "Na Kontaktoni",
         "about-title": "Rreth Zyrës Ligjore",
         "about-text": "Ne ofrojmë shërbime ligjore të specializuara me fokus në imigracionin.",
         "virtual-title": "Asistenti Juaj Ligjor Virtual",
@@ -241,18 +199,8 @@
         "service3": "Shtetësia dhe natyralizimi",
         "service4": "Imigrimi familjar dhe profesional",
         "service5": "Mbrojtje nga deportimi dhe apelime",
-        "testimonials-title": "Çfarë Thonë Klientët Tanë",
-        "testimonial1": "Hamilton & Associates më ndihmuan të siguroj vizën time shpejt dhe profesionalisht.",
-        "testimonial1-cite": "– Ana K., Londër",
-        "testimonial2": "Ekipi i tyre ligjor e bëri procesin e Green Card të duket i lehtë. Rekomandohet shumë!",
-        "testimonial2-cite": "– Mateo D., Manchester",
-        "testimonial3": "Shumë reagues, komunikim i qartë dhe vërtet u interesuan për rastin tim.",
-        "testimonial3-cite": "– Lira S., Birmingham",
         "contact-title": "Na Kontaktoni",
-        "contact-text": "Gati për hapin tjetër? Rezervoni një konsultë me ekspertët tanë ligjorë sot.",
-        "contact-phone-label": "Telefoni:",
-        "contact-email-label": "Email:",
-        "contact-address-label": "Adresa:"
+        "contact-text": "Gati për hapin tjetër? Rezervoni një konsultë me ekspertët tanë ligjorë sot."
       }
     };
 
@@ -261,11 +209,7 @@
       document.querySelectorAll("[data-key]").forEach(el => {
         const key = el.getAttribute("data-key");
         if (translations[lang] && translations[lang][key]) {
-          if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
-            el.placeholder = translations[lang][key];
-          } else {
-            el.textContent = translations[lang][key];
-          }
+          el.textContent = translations[lang][key];
         }
       });
     });

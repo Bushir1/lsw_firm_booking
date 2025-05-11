@@ -1,72 +1,238 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
+{% if current_user.is_authenticated %}
+    
+{% else %}
+    <h2>Welcome to Our Law Firm</h2>
+{% endif %}
 
-  <section class="section animated-section frame-box" style="animation-delay: 0.2s;">
-    <h2>About Our Law Firm</h2>
-    <p>
-      We provide expert legal services across a variety of practice areas, with a strong focus on immigration law. 
-      Our seasoned attorneys are committed to guiding you through complex legal challenges with confidence, clarity, and care.
-    </p>
-  </section>
+<main>
+    <div class="container">
+      <section class="section animated-section frame-box" style="animation-delay: 0.2s;">
+        <h2 data-key="about-title">About Our Law Firm</h2>
+        <p data-key="about-text">
+          We provide expert legal services across a variety of practice areas, with a strong focus on immigration law.
+        </p>
+      </section>
 
-  <section class="section animated-section" style="animation-delay: 0.4s;">
-    <h3>Your Virtual Legal Assistant</h3>
-    <p>Have a question? Try our chatbot below — it's available 24/7 to help you with immigration topics and more.</p>
-    <div id="chatbot-container" style="margin: 20px 0;">
-      <iframe src="{{ url_for('chatbot') }}" width="100%" height="500px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>
+      <section class="section animated-section" style="animation-delay: 0.4s;">
+        <h3 data-key="virtual-title">Your Virtual Legal Assistant</h3>
+        <p data-key="virtual-desc">Have a question? Try our chatbot below — it's available 24/7 to help you with immigration topics and more.</p>
+        <div id="chatbot-container" style="margin: 20px 0;">
+          <iframe src="{{ url_for('chatbot') }}" width="100%" height="500px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>
+        </div>
+      </section>
+
+      <section class="section animated-section frame-box" style="animation-delay: 0.6s;">
+        <h3 data-key="why-title">Why Choose Us?</h3>
+        <ul>
+          <li data-key="why1"><strong>20+ years of experience</strong> in immigration and legal practice.</li>
+          <li data-key="why2"><strong>Personalized legal strategies</strong> for your specific case.</li>
+          <li data-key="why3"><strong>Multilingual support</strong> for global clients.</li>
+          <li data-key="why4"><strong>Proven success rate</strong> with complex cases.</li>
+        </ul>
+      </section>
+
+      <section class="section animated-section frame-box" style="animation-delay: 0.8s;">
+        <h3 data-key="services-title">Our Services Include:</h3>
+        <ul>
+          <li data-key="service1">Visa applications & renewals</li>
+          <li data-key="service2">Green card processing</li>
+          <li data-key="service3">Citizenship & naturalization</li>
+          <li data-key="service4">Family & employment immigration</li>
+          <li data-key="service5">Deportation defense & appeals</li>
+        </ul>
+      </section>
+      
+      <section class="section animated-section frame-box" style="animation-delay: 0.9s;">
+        <h3 data-key="testimonials-title">What Our Clients Say</h3>
+      
+        <blockquote data-key="testimonial1">"Hamilton & Associates helped me secure my visa quickly and professionally."</blockquote>
+        <cite data-key="testimonial1-cite">– Ana K., London</cite>
+      
+        <hr style="margin: 20px 0; border-color: #a3cef1;">
+      
+        <blockquote data-key="testimonial2">"Their legal team made the green card process feel easy. Highly recommended!"</blockquote>
+        <cite data-key="testimonial2-cite">– Mateo D., Manchester</cite>
+      
+        <hr style="margin: 20px 0; border-color: #a3cef1;">
+      
+        <blockquote data-key="testimonial3">"Very responsive, clear communication, and truly cared about my case."</blockquote>
+        <cite data-key="testimonial3-cite">– Lira S., Birmingham</cite>
+      </section>
+      
+      <section class="section animated-section frame-box" style="animation-delay: 1s;" id="contact-section">
+        <h3 data-key="contact-title">Contact Us</h3>
+        <p data-key="contact-text">
+          Ready to take the next step? Book a consultation to speak with one of our legal experts today.
+        </p>
+        <ul class="contact-details">
+          <li><strong data-key="contact-phone-label">Phone:</strong> <a href="tel:+1234567890">+1 (234) 567-890</a></li>
+          <li><strong data-key="contact-email-label">Email:</strong> <a href="mailto:info@yourfirm.com">info@yourfirm.com</a></li>
+          <li><strong data-key="contact-address-label">Address:</strong> <span>1 King's Cross Road, London, WC1X 9HX, UK</span></li>
+        </ul>
+        <div style="margin-top: 20px;">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d19816.46513333895!2d-0.12775845!3d51.5305391!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48761b3679e6b1c7%3A0xf7f9f4d7a42fa4ff!2sKing's%20Cross%2C%20London!5e0!3m2!1sen!2suk!4v1715181511517!5m2!1sen!2suk"
+            width="100%" height="300" style="border:0; border-radius: 8px;" allowfullscreen="" loading="lazy">
+          </iframe>
+        </div>
+      </section>
     </div>
-  </section>
+  </main>
 
-  <section class="section animated-section frame-box" style="animation-delay: 0.6s;">
-    <h3>Why Choose Us?</h3>
-    <ul>
-      <li><strong>20+ years of experience</strong> in immigration and general legal practice.</li>
-      <li><strong>Personalized legal strategies</strong> for your specific case.</li>
-      <li><strong>Multilingual support</strong> for global clients.</li>
-      <li><strong>Proven success rate</strong> with complex immigration cases.</li>
-    </ul>
-  </section>
+  <!-- Scroll Animation Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
 
-  <section class="section animated-section frame-box" style="animation-delay: 0.8s;">
-    <h3>Our Services Include:</h3>
-    <ul>
-      <li>Visa applications & renewals</li>
-      <li>Green card processing</li>
-      <li>Citizenship & naturalization</li>
-      <li>Family- and employment-based immigration</li>
-      <li>Deportation defense & appeals</li>
-    </ul>
-  </section>
+      document.querySelectorAll('.animated-section').forEach(section => observer.observe(section));
+    });
+  </script>
 
-  <section class="section animated-section frame-box" style="animation-delay: 0.9s;">
-    <h3>What Our Clients Say</h3>
-    <blockquote>"Hamilton & Associates helped me secure my visa quickly and professionally."</blockquote>
-    <cite>– Ana K., London</cite>
-    <hr>
-    <blockquote>"Their legal team made the green card process feel easy. Highly recommended!"</blockquote>
-    <cite>– Mateo D., Manchester</cite>
-    <hr>
-    <blockquote>"Very responsive, clear communication, and truly cared about my case."</blockquote>
-    <cite>– Lira S., Birmingham</cite>
-  </section>
+  <!-- JavaScript Language Switcher -->
+  <script>
+    const translations = {
+      en: {
+        title: "Law Firm Booking",
+        "firm-name": "Hamilton & Associates",
+        instagram: "Instagram",
+        welcome: "Welcome to Our Law Firm",
+        home: "Home",
+        book: "Book Appointment",
+        login: "Login",
+        logout: "Logout",
+        register: "Register",
+        chatbot: "Chatbot",
+        "about-title": "About Our Law Firm",
+        "about-text": "We provide expert legal services across a variety of practice areas, with a strong focus on immigration law.",
+        "virtual-title": "Your Virtual Legal Assistant",
+        "virtual-desc": "Have a question? Try our chatbot below — it's available 24/7 to help you with immigration topics and more.",
+        "why-title": "Why Choose Us?",
+        "why1": "20+ years of experience in immigration and legal practice.",
+        "why2": "Personalized legal strategies for your specific case.",
+        "why3": "Multilingual support for global clients.",
+        "why4": "Proven success rate with complex cases.",
+        "services-title": "Our Services Include:",
+        "service1": "Visa applications & renewals",
+        "service2": "Green card processing",
+        "service3": "Citizenship & naturalization",
+        "service4": "Family & employment immigration",
+        "service5": "Deportation defense & appeals",
+        "testimonials-title": "What Our Clients Say",
+        "testimonial1": "Hamilton & Associates helped me secure my visa quickly and professionally.",
+        "testimonial1-cite": "– Ana K., London",
+        "testimonial2": "Their legal team made the green card process feel easy. Highly recommended!",
+        "testimonial2-cite": "– Mateo D., Manchester",
+        "testimonial3": "Very responsive, clear communication, and truly cared about my case.",
+        "testimonial3-cite": "– Lira S., Birmingham",
+        "contact-title": "Contact Us",
+        "contact-text": "Ready to take the next step? Book a consultation to speak with one of our legal experts today.",
+        "contact-phone-label": "Phone:",
+        "contact-email-label": "Email:",
+        "contact-address-label": "Address:"
+      },
+      es: {
+        title: "Reserva de Bufete",
+        "firm-name": "Hamilton y Asociados",
+        instagram: "Instagram",
+        welcome: "Bienvenido a Nuestro Bufete",
+        home: "Inicio",
+        book: "Reservar Cita",
+        login: "Iniciar Sesión",
+        logout: "Cerrar Sesión",
+        register: "Registrarse",
+        chatbot: "Asistente Virtual",
+        "about-title": "Sobre Nuestro Bufete",
+        "about-text": "Ofrecemos servicios legales expertos en varias áreas, centrados en la ley de inmigración.",
+        "virtual-title": "Su Asistente Legal Virtual",
+        "virtual-desc": "¿Tiene preguntas? Pruebe nuestro chatbot 24/7 sobre temas de inmigración.",
+        "why-title": "¿Por Qué Elegirnos?",
+        "why1": "Más de 20 años de experiencia en leyes de inmigración.",
+        "why2": "Estrategias legales personalizadas para su caso.",
+        "why3": "Soporte multilingüe para clientes globales.",
+        "why4": "Tasa de éxito comprobada.",
+        "services-title": "Nuestros Servicios Incluyen:",
+        "service1": "Solicitudes y renovaciones de visa",
+        "service2": "Procesamiento de tarjeta verde",
+        "service3": "Ciudadanía y naturalización",
+        "service4": "Inmigración familiar y laboral",
+        "service5": "Defensa contra deportación y apelaciones",
+        "testimonials-title": "Lo Que Dicen Nuestros Clientes",
+        "testimonial1": "Hamilton & Associates me ayudó a obtener mi visa de manera rápida y profesional.",
+        "testimonial1-cite": "– Ana K., Londres",
+        "testimonial2": "Su equipo legal hizo que el proceso de la tarjeta verde fuera fácil. ¡Muy recomendado!",
+        "testimonial2-cite": "– Mateo D., Manchester",
+        "testimonial3": "Muy receptivos, comunicación clara y realmente se preocuparon por mi caso.",
+        "testimonial3-cite": "– Lira S., Birmingham",
+        "contact-title": "Contáctenos",
+        "contact-text": "¿Listo para avanzar? Programe una consulta con nuestros expertos legales hoy.",
+        "contact-phone-label": "Teléfono:",
+        "contact-email-label": "Correo electrónico:",
+        "contact-address-label": "Dirección:"
+      },
+      sq: {
+        title: "Rezervimi Ligjor",
+        "firm-name": "Hamilton & Bashkëpunëtorët",
+        instagram: "Instagram",
+        welcome: "Mirë se vini në Zyrën Ligjore",
+        home: "Ballina",
+        book: "Rezervo Takim",
+        login: "Hyr",
+        logout: "Dil",
+        register: "Regjistrohu",
+        chatbot: "Asistent Virtual",
+        "about-title": "Rreth Zyrës Ligjore",
+        "about-text": "Ne ofrojmë shërbime ligjore të specializuara me fokus në imigracionin.",
+        "virtual-title": "Asistenti Juaj Ligjor Virtual",
+        "virtual-desc": "Keni pyetje? Përdorni chatbot-in tonë 24/7 për ndihmë me imigracionin.",
+        "why-title": "Pse të na Zgjidhni?",
+        "why1": "20+ vite përvojë në ligjin e imigracionit.",
+        "why2": "Strategji të personalizuara për çdo klient.",
+        "why3": "Mbështetje në shumë gjuhë.",
+        "why4": "Sukses i dëshmuar në raste të vështira.",
+        "services-title": "Shërbimet Tona Përfshijnë:",
+        "service1": "Aplikime dhe rinovime vizash",
+        "service2": "Përpunimi i Green Card",
+        "service3": "Shtetësia dhe natyralizimi",
+        "service4": "Imigrimi familjar dhe profesional",
+        "service5": "Mbrojtje nga deportimi dhe apelime",
+        "testimonials-title": "Çfarë Thonë Klientët Tanë",
+        "testimonial1": "Hamilton & Associates më ndihmuan të siguroj vizën time shpejt dhe profesionalisht.",
+        "testimonial1-cite": "– Ana K., Londër",
+        "testimonial2": "Ekipi i tyre ligjor e bëri procesin e Green Card të duket i lehtë. Rekomandohet shumë!",
+        "testimonial2-cite": "– Mateo D., Manchester",
+        "testimonial3": "Shumë reagues, komunikim i qartë dhe vërtet u interesuan për rastin tim.",
+        "testimonial3-cite": "– Lira S., Birmingham",
+        "contact-title": "Na Kontaktoni",
+        "contact-text": "Gati për hapin tjetër? Rezervoni një konsultë me ekspertët tanë ligjorë sot.",
+        "contact-phone-label": "Telefoni:",
+        "contact-email-label": "Email:",
+        "contact-address-label": "Adresa:"
+      }
+    };
 
-  <section class="section animated-section frame-box" style="animation-delay: 1s;" id="contact-section">
-    <h3>Contact Us</h3>
-    <p>📍 123 Legal Avenue, Boston, MA 02101</p>
-    <p>📞 +1 (123) 456-7890</p>
-    <p>✉️ info@yourfirm.com</p>
-    <p><strong>Location:</strong></p>
-    <iframe 
-      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2949.0787993148453!2d-71.05888048454247!3d42.36008297918639!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e370aaf50e8b55%3A0x75b62e20e5a6f061!2sBoston%2C%20MA!5e0!3m2!1sen!2sus!4v1605318478694!5m2!1sen!2sus" 
-      width="100%" 
-      height="300" 
-      style="border:0; border-radius: 10px;" 
-      allowfullscreen="" 
-      loading="lazy">
-    </iframe>
-  </section>
+    document.getElementById("language-switcher").addEventListener("change", function () {
+      const lang = this.value;
+      document.querySelectorAll("[data-key]").forEach(el => {
+        const key = el.getAttribute("data-key");
+        if (translations[lang] && translations[lang][key]) {
+          if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+            el.placeholder = translations[lang][key];
+          } else {
+            el.textContent = translations[lang][key];
+          }
+        }
+      });
+    });
+  </script>
 
-</div>
 {% endblock %}

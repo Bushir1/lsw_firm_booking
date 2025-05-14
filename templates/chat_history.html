@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recent Chats</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .chat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .chat-message {
+            padding: 12px 15px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: auto;
+            border-bottom-right-radius: 0;
+        }
+        
+        .bot-message {
+            background-color: #e8f5e9;
+            margin-right: auto;
+            border-bottom-left-radius: 0;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .no-chats {
+            text-align: center;
+            padding: 30px;
+            color: #95a5a6;
+            font-style: italic;
+        }
+        
+        .back-btn {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        
+        .back-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h2>Recent Conversations</h2>
+        
+        <div class="chat-list">
+            {% if chat_history %}
+                {% for chat in chat_history %}
+                    <div class="chat-message user-message">
+                        <div>{{ chat.user_message }}</div>
+                        <div class="timestamp">{{ chat.timestamp.strftime('%b %d %I:%M %p') }}</div>
+                    </div>
+                    
+                    <div class="chat-message bot-message">
+                        <div>{{ chat.bot_reply }}</div>
+                        <div class="timestamp">{{ chat.timestamp.strftime('%b %d %I:%M %p') }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-chats">No recent conversations found</div>
+            {% endif %}
+        </div>
+        
+        <a href="{{ url_for('chatbot_interface') }}" class="back-btn">Back to Chat</a>
+    </div>
+</body>
+</html>

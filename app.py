@@ -1,223 +1,243 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from datetime import datetime, time
+from datetime import datetime, time, date
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import fitz  # PyMuPDF
-import requests
 import os
+import re
 from dotenv import load_dotenv
-from openai import OpenAI
 from flask_migrate import Migrate
-from datetime import datetime, time, date
-from flask import abort
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+from typing import List, Dict
+import warnings
 
-
-
-
-
-
+# Suppress warnings
+warnings.filterwarnings("ignore")
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Allow frontend to access this backend
+CORS(app)
 
 # Load environment variables from .env file
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:benjamin@localhost:3306/my_database'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:newpassword@localhost:3306/lsw_firm_db'
-
-
-# Set a secret key for session management (required for flash messages & Flask-Login)
+# Configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:newpassword@localhost:3306/lsw_firm_db1'
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "your_default_secret_key_here")
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB upload limit
 
-
-# Initialize the database
+# Initialize DB and login manager
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-# Initialize Flask-Login
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# Define the User model
+# Load DeepSeek model
+MODEL_PATH = os.path.expanduser("~/Documents/deepseek-ai/DeepSeek-R1-Distill-Llama-8B")
+  # Update this if your model is saved elsewhere
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+try:
+    print("Loading DeepSeek model...")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+    model = AutoModelForCausalLM.from_pretrained(MODEL_PATH).to(device)
+    print("✓ DeepSeek model loaded successfully")
+except Exception as e:
+    print(f"Error loading model: {e}")
+    model = None
+    tokenizer = None
+
+# Models
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)  # Storing hashed password
-    email = db.Column(db.String(120), unique=True, nullable=False)  # Add email field
-    first_name = db.Column(db.String(100), nullable=False)  # Add first name
-    last_name = db.Column(db.String(100), nullable=False)  # Add last name
-    dob = db.Column(db.Date, nullable=False)  # Add date of birth
-    nationality = db.Column(db.String(100), nullable=False)  # Add nationality
-    phone = db.Column(db.String(15), nullable=False)  # Add phone number
-    address = db.Column(db.String(255), nullable=True)  # Add address field (optional)
+    password = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    dob = db.Column(db.Date, nullable=False)
+    nationality = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(15), nullable=False)
+    address = db.Column(db.String(255), nullable=True)
     appointments = db.relationship('Appointment', backref='user', lazy=True)
+    chat_history = db.relationship('ChatHistory', backref='user', lazy=True, cascade="all, delete-orphan")
 
-    def __repr__(self):
-        return f'<User {self.username}>'
-
-
-class Query(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    question = db.Column(db.String(500), nullable=False)
-    answer = db.Column(db.String(500), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-# Define the Appointment model
 class Appointment(db.Model):
-    __tablename__ = 'appointments'  # Explicitly set the table name
-    
+    __tablename__ = 'appointments'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False)  # Add phone_number field
+    phone_number = db.Column(db.String(20), nullable=False)
     date = db.Column(db.Date, nullable=False)
     time = db.Column(db.Time, nullable=False)
     message = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.TIMESTAMP, server_default=db.func.current_timestamp(), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    def __repr__(self):
-        return f'<Appointment {self.name} on {self.date}>'
-
-
-# Add this model to your existing models
 class ChatHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user_message = db.Column(db.String(500), nullable=False)
-    bot_reply = db.Column(db.String(500), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    user_message = db.Column(db.Text, nullable=False)
+    bot_reply = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
+    __table_args__ = (db.Index('idx_user_timestamp', 'user_id', 'timestamp'),)
 
-# Load a user for Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))  # ✅ Correct for SQLAlchemy 2.0
+    return db.session.get(User, int(user_id))
 
 
-# Home route with user greeting
+
+# Chat formatting
+def format_chat_history(history: List[Dict]) -> str:
+    return "\n".join(f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content']}" for m in history)
+
+def generate_deepseek_response(prompt: str, history: List[Dict] = None, max_length: int = 1500) -> str:
+    if not model or not tokenizer:
+        return "Error: Model not loaded"
+    try:
+        system_msg = {
+            "role": "system",
+            "content": f"Legal Context:\n{law_text[:10000]}\n\nYou are a helpful legal assistant."
+        }
+        chat_history = history or []
+        messages = [system_msg] + chat_history + [{"role": "user", "content": prompt}]
+        formatted_input = format_chat_history(messages)
+        inputs = tokenizer(formatted_input, return_tensors="pt", truncation=True, max_length=4096).to(device)
+        outputs = model.generate(
+            inputs.input_ids,
+            max_new_tokens=max_length,
+            temperature=0.7,
+            top_p=0.9,
+            do_sample=True,
+            pad_token_id=tokenizer.eos_token_id
+        )
+        full_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        response = full_response.split("Assistant:")[-1].strip()
+        return response.split("User:")[0].strip()
+    except Exception as e:
+        print(f"Generation error: {e}")
+        return "Sorry, an error occurred generating the response."
+
+# Routes
 @app.route('/')
 def home():
-    # Pass user data and ensure all template variables are included
     return render_template('home.html',
-                         user=current_user if current_user.is_authenticated else None,
-                         today=date.today().isoformat())  # If your home page needs date
-# Registration route with password hashing
+                           user=current_user if current_user.is_authenticated else None,
+                           today=date.today().isoformat())
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # Extract data from the form
-        first_name = request.form['name']
-        last_name = request.form['surname']
-        dob = request.form['dob']
-        nationality = request.form['nationality']
-        phone = request.form['phone']
-        email = request.form['email']
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        address = request.form.get('address', '')  # Optional field
+        try:
+            first_name = request.form['name']
+            last_name = request.form['surname']
+            dob = datetime.strptime(request.form['dob'], '%Y-%m-%d').date()
+            nationality = request.form['nationality']
+            phone = request.form['phone']
+            email = request.form['email']
+            username = request.form['username']
+            password = request.form['password']
+            confirm_password = request.form['confirm_password']
+            address = request.form.get('address', '')
 
-        # Check if the username or email already exists
-        existing_user = User.query.filter_by(username=username).first()
-        existing_email = User.query.filter_by(email=email).first()
-        if existing_user:
-            flash('Username already exists. Please choose a different one.', 'danger')
+            today = date.today()
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            if age < 18:
+                flash('You must be at least 18 years old to register.', 'danger')
+                return redirect(url_for('register'))
+
+            if User.query.filter_by(username=username).first():
+                flash('Username already exists', 'danger')
+                return redirect(url_for('register'))
+            if User.query.filter_by(email=email).first():
+                flash('Email already exists', 'danger')
+                return redirect(url_for('register'))
+            if password != confirm_password:
+                flash('Passwords do not match', 'danger')
+                return redirect(url_for('register'))
+
+            new_user = User(
+                username=username,
+                password=generate_password_hash(password),
+                first_name=first_name,
+                last_name=last_name,
+                dob=dob,
+                nationality=nationality,
+                phone=phone,
+                email=email,
+                address=address
+            )
+
+            db.session.add(new_user)
+            db.session.commit()
+            login_user(new_user)
+            flash('Registration successful!', 'success')
+            return redirect(url_for('home'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash('Registration failed. Please try again.', 'danger')
+            app.logger.error(f"Registration error: {e}")
             return redirect(url_for('register'))
-        if existing_email:
-            flash('Email already exists. Please use a different one.', 'danger')
-            return redirect(url_for('register'))
-
-        # Check password confirmation
-        if password != confirm_password:
-            flash('Passwords do not match.', 'danger')
-            return redirect(url_for('register'))
-
-        # Hash the password before storing
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-
-        # Create a new user and store it in the database
-        new_user = User(
-            username=username,
-            password=hashed_password,
-            first_name=first_name,
-            last_name=last_name,
-            dob=dob,
-            nationality=nationality,
-            phone=phone,
-            email=email,
-            address=address
-        )
-
-        db.session.add(new_user)
-        db.session.commit()
-
-        flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('login'))
 
     return render_template('register.html')
 
-# Login route with password verification
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
-        # Check if the user exists
         user = User.query.filter_by(username=username).first()
+
         if user and check_password_hash(user.password, password):
             login_user(user)
             flash('Logged in successfully!', 'success')
             return redirect(url_for('home'))
         else:
-            flash('Invalid username or password.', 'danger')
+            flash('Invalid username or password', 'danger')
 
     return render_template('login.html')
 
-# Logout route
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     flash('Logged out successfully!', 'success')
     return redirect(url_for('home'))
-
-# Book appointment route
 @app.route('/book', methods=['GET', 'POST'])
 @login_required
 def book():
     if request.method == 'POST':
-        # Verify CSRF token first
-        
-        
         try:
-            # Use authenticated user's info instead of form data
             phone_number = request.form['phone_number']
             date_str = request.form['date']
             time_str = request.form['time']
             message = request.form.get('message', '')
 
-            # Validate phone number format
+            # Validate phone number
             if not re.match(r'^\+?[0-9]{1,4}?[0-9]{6,12}$', phone_number):
-                flash('Please enter a valid phone number', 'danger')
+                flash('Invalid phone number format', 'danger')
                 return redirect(url_for('book'))
 
-            # Convert and validate date/time
+            # Parse date/time
             appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             appointment_time = datetime.strptime(time_str, '%H:%M').time()
 
-            # Business rule validation
-            if appointment_date.weekday() >= 5:  # Sat/Sun
+            # Validate business rules
+            if appointment_date.weekday() >= 5:
                 flash('Weekend appointments not available', 'danger')
                 return redirect(url_for('book'))
 
             if not (time(9, 0) <= appointment_time <= time(17, 0)):
-                flash('Outside business hours (9AM-5PM)', 'danger')
+                flash('Appointments available 9AM-5PM only', 'danger')
                 return redirect(url_for('book'))
 
             # Check for existing appointment
@@ -231,7 +251,7 @@ def book():
                 flash('You already have an appointment at this time', 'warning')
                 return redirect(url_for('book'))
 
-            # Create and save appointment
+            # Create appointment
             new_appointment = Appointment(
                 name=f"{current_user.first_name} {current_user.last_name}",
                 email=current_user.email,
@@ -244,109 +264,116 @@ def book():
 
             db.session.add(new_appointment)
             db.session.commit()
-            
             flash('Appointment booked successfully!', 'success')
             return redirect(url_for('confirmation'))
 
         except ValueError as e:
-            flash(f'Invalid input: {str(e)}', 'danger')
+            flash(f'Invalid date/time format: {str(e)}', 'danger')
             return redirect(url_for('book'))
         except Exception as e:
             db.session.rollback()
-            flash('Error saving appointment. Please try again.', 'danger')
+            flash('Failed to book appointment', 'danger')
             app.logger.error(f"Booking error: {str(e)}")
             return redirect(url_for('book'))
 
-    # GET request
-    today = date.today().isoformat()
-    return render_template('book.html', 
-                         today=today,
-                         user=current_user)
+    return render_template('book.html', today=date.today().isoformat(), user=current_user)
 
-# Confirmation route
 @app.route('/confirmation')
 def confirmation():
     return render_template('confirmation.html')
 
-# Appointments route
 @app.route('/appointments')
 @login_required
 def appointments():
-    user_appointments = Appointment.query.filter_by(user_id=current_user.id).order_by(Appointments.date, Appointment.time).all()
+    user_appointments = Appointment.query.filter_by(user_id=current_user.id)\
+                                      .order_by(Appointment.date, Appointment.time)\
+                                      .all()
     return render_template('appointments.html', appointments=user_appointments)
 
-# Read content from LAW.txt with proper encoding handling
-law_text = ""
-if os.path.exists("LAW.txt"):
-    try:
-        with open("LAW.txt", "r", encoding="utf-8") as file:
-            law_text = file.read()
-    except UnicodeDecodeError:
-        with open("LAW.txt", "r", encoding="latin-1") as file:
-            law_text = file.read()
-else:
-    print("Warning: LAW.txt file not found.")
-
-
-
 @app.route("/chatbot")
-def chat():
+@login_required
+def chat_interface():
     return render_template("chatbot.html")
 
-# Chatbot API
 @app.route("/chatbot", methods=["POST"])
+@login_required
 def chatbot():
     data = request.json
-    user_message = data.get("message", "")
+    user_message = data.get("message", "").strip()
 
     if not user_message:
-        return jsonify({"reply": "Please enter a message."}), 400
+        return jsonify({"reply": "Please enter a message.", "timestamp": datetime.utcnow().isoformat()}), 400
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are an AI assistant trained to provide legal information based on the following text:"},
-                {"role": "system", "content": law_text},
-                {"role": "user", "content": user_message}
-            ],
-        )
-        bot_reply = response.choices[0].message.content
+        previous_chats = ChatHistory.query.filter_by(
+            user_id=current_user.id
+        ).order_by(ChatHistory.timestamp.desc()).limit(4).all()
 
-        # Save the conversation to the database
-        if current_user.is_authenticated:
-            new_chat = ChatHistory(
-                user_id=current_user.id,
-                user_message=user_message,
-                bot_reply=bot_reply
-            )
-            db.session.add(new_chat)
-            db.session.commit()
+        history = []
+        for chat in reversed(previous_chats):
+            history.extend([
+                {"role": "user", "content": chat.user_message},
+                {"role": "assistant", "content": chat.bot_reply}
+            ])
+
+        bot_reply = generate_deepseek_response(user_message, history)
+        timestamp = datetime.utcnow()
+
+        new_chat = ChatHistory(
+            user_id=current_user.id,
+            user_message=user_message,
+            bot_reply=bot_reply,
+            timestamp=timestamp
+        )
+        db.session.add(new_chat)
+
+        chat_count = ChatHistory.query.filter_by(user_id=current_user.id).count()
+        if chat_count > 20:
+            oldest = ChatHistory.query.filter_by(user_id=current_user.id)\
+                .order_by(ChatHistory.timestamp.asc()).limit(chat_count - 20).all()
+            for chat in oldest:
+                db.session.delete(chat)
+
+        db.session.commit()
+
+        return jsonify({
+            "reply": bot_reply,
+            "timestamp": timestamp.isoformat()
+        })
 
     except Exception as e:
-        return jsonify({"reply": f"Error: {str(e)}"}), 500
+        app.logger.error(f"Chatbot error: {str(e)}")
+        return jsonify({
+            "reply": "Sorry, I encountered an error. Please try again.",
+            "timestamp": datetime.utcnow().isoformat()
+        }), 500
 
-    return jsonify({"reply": bot_reply})
-
-@app.route("/chatbot-history")
+@app.route('/chat-history')
 @login_required
-def chat_history():
-    user_chats = ChatHistory.query.filter_by(user_id=current_user.id).order_by(ChatHistory.timestamp).all()
-    chat_data = [{"user_message": chat.user_message, "bot_reply": chat.bot_reply} for chat in user_chats]
-    return jsonify(chat_data)
+def view_chat_history():
+    chats = ChatHistory.query.filter_by(user_id=current_user.id)\
+        .order_by(ChatHistory.timestamp.desc()).limit(5).all()
+    return render_template('chat_history.html', chat_history=reversed(chats))
 
 @app.route("/clear-chat-history", methods=["POST"])
 @login_required
 def clear_chat_history():
     try:
-        ChatHistory.query.filter_by(user_id=current_user.id).delete()
+        deleted = ChatHistory.query.filter_by(user_id=current_user.id).delete()
         db.session.commit()
-        return jsonify({"success": True, "message": "Chat history cleared successfully."})
+        return jsonify({
+            "success": True,
+            "message": f"Deleted {deleted} messages",
+            "timestamp": datetime.utcnow().isoformat()
+        })
     except Exception as e:
-        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+        db.session.rollback()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 
 if __name__ == '__main__':
     with app.app_context():
-        if not os.path.exists('instance/appointments.db'):  # Check if DB exists
-            db.create_all()  # Create database if it doesn't exist
-    app.run(debug=True)
+        db.create_all()
+    app.run(host='0.0.0.0', port=5000, debug=True)

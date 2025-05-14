@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chatbot</title>
+  <title>Legal Assistant Chatbot</title>
   <style>
     /* Background watermark */
     body::before {
@@ -93,6 +93,8 @@
       border-radius: 10px;
       margin: 5px 0;
       max-width: 70%;
+      word-wrap: break-word;
+      line-height: 1.4;
     }
 
     .user-message {
@@ -124,6 +126,29 @@
       font-size: 14px;
       margin-top: 10px;
       width: 100%;
+      transition: background-color 0.3s ease;
+    }
+
+    .clear-button:hover {
+      background-color: #c82333;
+    }
+
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .chat-title {
+      margin: 0;
+      color: #1b263b;
+    }
+
+    .timestamp {
+      font-size: 0.7em;
+      color: #6c757d;
+      margin-top: 3px;
     }
 
     @media (max-height: 600px) {
@@ -136,100 +161,143 @@
 </head>
 <body>
   <div class="chat-container">
-    <h3>Chatbot</h3>
+    <div class="chat-header">
+      <h3 class="chat-title">Legal Assistant</h3>
+    </div>
     <div class="chat-box" id="chat-box">
       <!-- Chat history will be loaded here -->
     </div>
     <div class="chat-input-container">
-      <input type="text" id="chat-input" class="chat-input" placeholder="Type a message...">
+      <input type="text" id="chat-input" class="chat-input" placeholder="Type your legal question..." autocomplete="off">
       <button class="send-button" onclick="sendMessage()">Send</button>
     </div>
-    <button class="clear-button" onclick="clearChat()">Clear Chat</button>
+    <button class="clear-button" onclick="clearChat()">Clear Conversation</button>
   </div>
 
   <script>
-    window.onload = async function () {
+    // Function to format timestamp
+    function formatTimestamp(date = new Date()) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Function to add message to chat
+    function addMessageToChat(message, sender) {
+      const chatBox = document.getElementById('chat-box');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `chat-message ${sender}-message`;
+      
+      const content = document.createElement('div');
+      content.textContent = message;
+      
+      const timestamp = document.createElement('div');
+      timestamp.className = 'timestamp';
+      timestamp.textContent = formatTimestamp();
+      
+      messageDiv.appendChild(content);
+      messageDiv.appendChild(timestamp);
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Function to show typing indicator
+    function showTypingIndicator() {
+      const chatBox = document.getElementById('chat-box');
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'typing-indicator';
+      typingDiv.textContent = 'Assistant is typing...';
+      typingDiv.id = 'typing-indicator';
+      chatBox.appendChild(typingDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Function to hide typing indicator
+    function hideTypingIndicator() {
+      const indicator = document.getElementById('typing-indicator');
+      if (indicator) indicator.remove();
+    }
+
+    // Load chat history when page loads
+    window.onload = async function() {
       try {
-        let response = await fetch("/chat-history", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
+        const response = await fetch('/chatbot-history', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
         });
 
-        let data = await response.json();
-        let chatBox = document.getElementById("chat-box");
-        chatBox.innerHTML = "";
+        if (!response.ok) throw new Error('Failed to load chat history');
 
-        data.forEach(chat => {
-          let userMessage = document.createElement("div");
-          userMessage.className = "chat-message user-message";
-          userMessage.textContent = chat.user_message;
-          chatBox.appendChild(userMessage);
+        const history = await response.json();
+        const chatBox = document.getElementById('chat-box');
+        chatBox.innerHTML = '';
 
-          let botMessage = document.createElement("div");
-          botMessage.className = "chat-message bot-message";
-          botMessage.textContent = chat.bot_reply;
-          chatBox.appendChild(botMessage);
-        });
-
-        chatBox.scrollTop = chatBox.scrollHeight;
+        if (history.length === 0) {
+          addMessageToChat('Hello! I\'m your legal assistant. How can I help you today?', 'bot');
+        } else {
+          history.forEach(chat => {
+            addMessageToChat(chat.user_message, 'user');
+            addMessageToChat(chat.bot_reply, 'bot');
+          });
+        }
       } catch (error) {
-        console.error("Error loading chat history:", error);
+        console.error('Error loading chat history:', error);
+        addMessageToChat('Welcome! I\'m your legal assistant. Ask me anything about legal matters.', 'bot');
       }
     };
 
+    // Send message function
     async function sendMessage() {
-      let inputField = document.getElementById("chat-input");
-      let message = inputField.value.trim();
-      if (message === "") return;
+      const inputField = document.getElementById('chat-input');
+      const message = inputField.value.trim();
+      if (message === '') return;
 
-      let chatBox = document.getElementById("chat-box");
-
-      let userMessage = document.createElement("div");
-      userMessage.className = "chat-message user-message";
-      userMessage.textContent = message;
-      chatBox.appendChild(userMessage);
-
-      let typingIndicator = document.createElement("div");
-      typingIndicator.className = "typing-indicator";
-      typingIndicator.textContent = "Chatbot is typing...";
-      chatBox.appendChild(typingIndicator);
-
-      chatBox.scrollTop = chatBox.scrollHeight;
+      // Add user message to chat immediately
+      addMessageToChat(message, 'user');
+      inputField.value = '';
+      
+      // Show typing indicator
+      showTypingIndicator();
 
       try {
-        let response = await fetch("/chatbot", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const response = await fetch('/chatbot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: message })
         });
 
-        let data = await response.json();
+        if (!response.ok) throw new Error('Network response was not ok');
 
-        chatBox.removeChild(typingIndicator);
-
-        let botMessage = document.createElement("div");
-        botMessage.className = "chat-message bot-message";
-        botMessage.textContent = data.reply;
-        chatBox.appendChild(botMessage);
+        const data = await response.json();
+        hideTypingIndicator();
+        addMessageToChat(data.reply, 'bot');
       } catch (error) {
-        chatBox.removeChild(typingIndicator);
-        let errorMessage = document.createElement("div");
-        errorMessage.className = "chat-message bot-message";
-        errorMessage.textContent = "Error: Could not reach the chatbot.";
-        chatBox.appendChild(errorMessage);
+        hideTypingIndicator();
+        addMessageToChat('Sorry, I encountered an error. Please try again.', 'bot');
+        console.error('Error:', error);
       }
-
-      chatBox.scrollTop = chatBox.scrollHeight;
-      inputField.value = "";
     }
 
-    function clearChat() {
-      let chatBox = document.getElementById("chat-box");
-      chatBox.innerHTML = '<div class="chat-message bot-message">Hello! Ask me anything from the document.</div>';
+    // Clear chat function
+    async function clearChat() {
+      try {
+        const response = await fetch('/clear-chat-history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!response.ok) throw new Error('Failed to clear chat history');
+
+        const chatBox = document.getElementById('chat-box');
+        chatBox.innerHTML = '';
+        addMessageToChat('Conversation cleared. How can I help you now?', 'bot');
+      } catch (error) {
+        console.error('Error clearing chat:', error);
+        addMessageToChat('Failed to clear conversation. Please try again.', 'bot');
+      }
     }
 
-    document.getElementById("chat-input").addEventListener("keypress", function(event) {
-      if (event.key === "Enter") {
+    // Add event listener for Enter key
+    document.getElementById('chat-input').addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
         sendMessage();
       }
     });
